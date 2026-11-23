@@ -1,60 +1,41 @@
-# Sorteio Cesta Bebê
+# Sorteio Cesta Bebê — V3 (um único sorteio)
 
-Site de sorteio para gestantes, recriado a partir do original do Manus.
-React + Vite no front, Supabase (banco + login) e funções da Vercel.
+Site React + Vite, Supabase e Vercel. Versão completa, com **um único sorteio, uma cesta e um número vencedor**. As cinco imagens clicáveis apresentam uma vista geral da cesta e detalhes de seu conteúdo: não são cinco sorteios, colocações ou ganhadores.
 
-## O que tem
+## Atualização do site já existente
 
-- `/`: landing com hero, kits, destaques e formulário de inscrição
-- `/inscricao`: só o formulário
-- `/resultado`: dezenas da Federal, número sorteado, consulta por protocolo e regulamento
-- `/admin`: painel com Visão geral, Planilha de inscritas, Sorteio e resultado, Configurações
-- `/planilha`: atalho para a planilha do painel
-- Meta Pixel: `Lead` + `FormStart` no primeiro campo, `CompleteRegistration` (1 BRL) + `InscricaoConcluida` no sucesso
-- Rotina da Federal: cron da Vercel às 9h e às 21h30 (horário de Brasília). Ela busca o concurso, calcula o número e publica sozinha quando a publicação automática está ligada.
-- A integração Auto Lead ficou de fora, como combinado.
+1. **Antes do deploy**, acesse o Supabase do sorteio e execute **somente** `supabase/migracao-v3-sorteio-unico.sql` no SQL Editor. O arquivo não recria o banco, nem apaga `entries`, usuários, protocolos ou administradores. Descarta exclusivamente apurações **ainda não publicadas** da versão de cinco colocações, pois a regra única precisa ser recalculada.
+2. Se já existir resultado publicado, o SQL **interrompe sem aplicar as alterações**; revise a apuração já divulgada antes de continuar.
+3. Envie o conteúdo deste pacote (com `package.json` na raiz) para a branch `main` do seu repositório do GitHub vinculado à Vercel.
+4. Em Vercel: Vite, Root Directory `./`, build `npm run build`, output `dist`. Preserve suas variáveis atuais: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e `CRON_SECRET`.
+5. Confira o novo deployment como `Ready` e revise o regulamento em `/admin?aba=sorteio`. **A regra de apuração do sorteio único não pode ser alterada depois da publicação** sem a avaliação do concurso.
 
-## Passo a passo
+**Não execute novamente** `supabase/schema.sql` no banco existente. Ele serve **somente para uma instalação nova, vazia**.
 
-### 1. Supabase
-1. Crie um projeto em supabase.com.
-2. Abra o **SQL Editor**, cole o arquivo `supabase/schema.sql` inteiro e clique em Run.
-3. Vá em **Authentication → Users → Add user**, crie seu usuário (e-mail + senha) e marque *Auto Confirm*.
-4. Volte ao SQL Editor e rode (trocando o e-mail):
-   ```sql
-   insert into public.admin_users (user_id, username, name)
-   select id, email, 'Organização' from auth.users where email = 'SEU-EMAIL@exemplo.com';
-   ```
-5. Em **Project Settings → API**, copie a *Project URL*, a *anon key* e a *service_role key*.
+## O que foi preservado
 
-### 2. Vercel
-1. Suba esta pasta para um repositório no GitHub e importe na Vercel (ela detecta Vite sozinha).
-2. Em **Settings → Environment Variables**, adicione:
-   | Nome | Valor |
-   |---|---|
-   | `VITE_SUPABASE_URL` | Project URL |
-   | `VITE_SUPABASE_ANON_KEY` | anon key |
-   | `SUPABASE_URL` | Project URL |
-   | `SUPABASE_SERVICE_ROLE_KEY` | service_role key (nunca coloque no front) |
-   | `CRON_SECRET` | uma frase longa qualquer |
-3. Faça o deploy. Entre em `/admin` com o usuário criado no passo 1.
+- Home de tons delicados, fotografias em WebP, carrossel automático de 3 segundos e controles manuais.
+- Cinco imagens clicáveis que crescem no desktop e se destacam no celular, agora representando detalhes de **uma única cesta**.
+- Cadastro, protocolo, consulta individual de resultado, painel, planilha de participantes, administradores e contatos opcionais no rodapé.
+- Integração com a Loteria Federal e atualização automática, agora calculando apenas um número vencedor.
 
-### 3. Primeiro uso no painel
-- **Configurações**: nome do sorteio, Pixel, WhatsApp da organização, Instagram, e-mail e URL da foto do prêmio. A foto aparece no topo do site; sem foto, o site mostra uma ilustração.
-- **Sorteio e resultado**: data de encerramento, concurso (botão *Detectar*), regra de cálculo e texto do regulamento.
+## Cálculo do número vencedor
 
-## Regra do sorteio
-- Cada inscrita recebe um número aleatório e único de 00000 a 99999, e um protocolo `SB2026` + sequência + código.
-- O CPF só pode se inscrever uma vez. Quem repete o CPF vê o número que já tem.
-- `soma_modulo` (padrão): soma dos 4 últimos dígitos de cada um dos 5 prêmios, guardando os 5 últimos dígitos.
-- `primeira_dezena`: usa só o 1º prêmio.
-- Se nenhuma inscrita tiver o número exato, o painel mostra "nenhuma cota correspondente".
-- Se a API da Caixa estiver fora do ar, lance as dezenas à mão em *Lançar dezenas manualmente*.
+O administrador pode usar um dos dois métodos que já existiam no banco, aplicados a **um único sorteio**:
 
-## Rodar no computador
+- `soma_modulo`: soma os quatro últimos dígitos de cada um dos cinco resultados de referência da Loteria Federal, aplicando módulo 100000.
+- `primeira_dezena`: últimos cinco dígitos do primeiro resultado oficial.
+
+A regra escolhida precisa estar alinhada ao regulamento. Se o número calculado não estiver atribuído a uma inscrição válida, o sistema informa que não houve contemplado; não inventa ganhador nem altera números.
+
+## Desenvolvimento local
+
 ```bash
-cp .env.example .env   # preencha as chaves
 npm install
-npm run dev            # site em http://localhost:5173
+npm run build
+npm run dev
 ```
-As rotas `/api/*` só funcionam na Vercel ou com `vercel dev`.
+
+As APIs em `/api` são funções serverless da Vercel. Em desenvolvimento local, execute com `vercel dev` caso precise testar essas rotas.
+
+> Atenção: verifique a regulamentação aplicável às promoções comerciais no Brasil antes de divulgar uma campanha real.

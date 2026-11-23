@@ -1,63 +1,113 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import SiteChrome from '../components/SiteChrome.jsx';
 import RegistrationForm from '../components/RegistrationForm.jsx';
-import PrizeArt from '../components/PrizeArt.jsx';
 import { useSite } from '../lib/site.jsx';
+import { getPrizes } from '../lib/prizes.js';
 
-const KITS = [
-  { t: 'Kit lenço umedecido', d: 'Para as trocas do dia a dia.', c: '#EEF0E5' },
-  { t: 'Pampers, fraldas e pomada Huggies', d: 'Fraldas e cuidado com a pele do bebê.', c: '#F1DDCF' },
-  { t: 'Kit presente chá de bebê', d: 'Mimos para celebrar a chegada.', c: '#E5ECDF' },
-  { t: 'Granado, cesta de cuidados maternidade', d: 'Cuidados para a mamãe e o bebê.', c: '#F6E7DC' },
+const SLIDES = [
+  { src: '/media/botinhas.webp', label: 'Feito com carinho', title: 'Pequenos detalhes, muito amor', text: 'Uma surpresa especial para acompanhar essa nova fase.' },
+  { src: '/media/mao-bebe.webp', label: 'Um novo começo', title: 'O melhor presente é o cuidado', text: 'Participação gratuita, com número exclusivo e apuração transparente.' },
+  { src: '/media/enxoval.webp', label: 'Momento especial', title: 'Aconchego em cada detalhe', text: 'Conheça os detalhes da cesta preparada para a futura mamãe.' },
 ];
 
-export default function Home() {
-  const { status, settings } = useSite();
+function Carousel() {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (paused || (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    const timer = setInterval(() => setActive((n) => (n + 1) % SLIDES.length), 3000);
+    return () => clearInterval(timer);
+  }, [paused]);
+  const prev = () => setActive((n) => (n + SLIDES.length - 1) % SLIDES.length);
+  const next = () => setActive((n) => (n + 1) % SLIDES.length);
   return (
-    <SiteChrome>
-      <section className="hero band">
-        <div className="wrap hero-grid">
-          <div className="hero-copy rise">
-            <span className="pill">Edição especial para gestantes</span>
-            <h1>{status?.title || 'SORTEIO de prêmios para o seu bebê.'}</h1>
-            <p className="lead">{status?.subtitle || 'Preencha o cadastro gratuitamente, receba seu número na hora e concorra a uma ajudinha carinhosa para o começo dessa nova fase.'}</p>
-            <div className="chips">
-              <span className="chip">Prêmios para essa nova fase</span>
-              <span className="chip">Resultado pela Loteria Federal</span>
-            </div>
-            <a href="#form-card" className="btn btn-lg">Quero meu número</a>
-          </div>
-          <div className="hero-art">
-            <PrizeArt src={settings.hero_image_url || settings.prize_image_url || '/kit-maternidade.jpg'} />
-          </div>
-        </div>
-      </section>
-
-      <section className="band soft">
-        <div className="wrap">
-          <p className="kicker">Você pode ganhar</p>
-          <h2>Kits para cuidar e celebrar</h2>
-          <div className="kits">
-            {KITS.map((k) => (
-              <article key={k.t} className="kit" style={{ '--kit': k.c }}>
-                <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="18" width="36" height="24" rx="6" fill="#5D785E" /><rect x="4" y="12" width="40" height="10" rx="4" fill="#A9B99B" /><rect x="21" y="12" width="6" height="30" fill="#F1DDCF" /><path d="M24 12c-4-8-12-6-10 0M24 12c4-8 12-6 10 0" stroke="#BD7058" strokeWidth="3" fill="none" strokeLinecap="round" /></svg>
-                <h3>{k.t}</h3>
-                <p>{k.d}</p>
+    <section className="story-carousel-wrap" aria-label="Destaques do sorteio" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setPaused(false); }}>
+      <div className="wrap story-carousel">
+        <button type="button" className="story-arrow" onClick={prev} aria-label="Slide anterior">‹</button>
+        <div className="story-viewport" aria-roledescription="carrossel">
+          <div className="story-track" style={{ transform: `translateX(-${active * 100}%)` }}>
+            {SLIDES.map((slide, i) => (
+              <article key={slide.title} className="story-slide" aria-hidden={i !== active}>
+                <img src={slide.src} alt="" loading={i === 0 ? 'eager' : 'lazy'} />
+                <div className="story-info"><span>{slide.label}</span><h3>{slide.title}</h3><p>{slide.text}</p></div>
               </article>
             ))}
           </div>
         </div>
-      </section>
+        <button type="button" className="story-arrow" onClick={next} aria-label="Próximo slide">›</button>
+      </div>
+      <div className="story-dots" aria-label="Selecionar destaque">
+        {SLIDES.map((slide, i) => <button key={slide.title} type="button" aria-label={`Ver destaque ${i + 1}`} aria-current={i === active ? 'true' : undefined} className={i === active ? 'active' : ''} onClick={() => setActive(i)} />)}
+      </div>
+    </section>
+  );
+}
 
-      <section className="band">
-        <div className="wrap form-grid">
-          <div className="highlights">
-            <div className="hl"><strong>Número exclusivo</strong><span>De 00000 a 99999, só seu.</span></div>
-            <div className="hl"><strong>Uma ajudinha para o seu começo.</strong><span>Inscrição gratuita, sem compra.</span></div>
-            <div className="hl"><strong>Sorteio transparente:</strong><span>Resultado pela Loteria Federal.</span></div>
+export default function Home() {
+  const { status, settings } = useSite();
+  const prizes = getPrizes(settings);
+  const [highlightedPrize, setHighlightedPrize] = useState(0);
+  const headline = status?.title && status.title !== 'SORTEIO de prêmios para o seu bebê.' ? status.title : 'Um carinho especial para mamães e futuros bebês.';
+  const firstImage = settings.hero_image_url || settings.prize_image_url || '/media/cesta-maternidade.webp';
+  return (
+    <SiteChrome>
+      <section className="new-hero" id="inicio">
+        <div className="wrap new-hero-grid">
+          <div className="new-hero-portrait"><img src="/media/gestante.webp" alt="Gestante acariciando a barriga em um ambiente acolhedor" fetchPriority="high" /></div>
+          <div className="new-hero-content">
+            <span className="eyebrow"><span aria-hidden="true">♡</span> Especial para gestantes</span>
+            <h1>{headline}</h1>
+            <p>{status?.subtitle || 'Participe gratuitamente, receba seu número na hora e concorra a uma cesta preparada para essa nova fase.'}</p>
+            <div className="new-hero-actions"><a className="btn btn-lg" href="#form-card">Quero participar agora <span aria-hidden="true">→</span></a><a className="btn btn-ghost btn-lg" href="#premios">Conhecer a cesta</a></div>
+            <div className="new-hero-trust"><span>✓ Inscrição gratuita</span><span>♡ Para gestantes</span><span>✧ Resultado público</span></div>
           </div>
-          <RegistrationForm />
+          <div className="new-hero-gift"><img src={firstImage} alt="Ilustração dos presentes da campanha" fetchPriority="high" /><span className="gift-sticker">Um gesto de carinho ♡</span></div>
         </div>
       </section>
+
+      <Carousel />
+
+      <section id="premios" className="new-prizes band">
+        <div className="wrap">
+          <div className="new-section-heading"><span className="eyebrow">Um único presente especial</span><h2>Uma cesta completa, cheia de carinho</h2><p>Um único sorteio, uma única cesta. Explore as fotos e os detalhes dos itens que compõem o presente.</p></div>
+          <p className="prize-interaction-hint">Clique ou toque em uma imagem para ver os detalhes da cesta em destaque.</p>
+          <div className={`new-prize-grid picked-${highlightedPrize + 1}`}>
+            {prizes.map((prize, i) => (
+              <article key={i} className={`new-prize-card ${highlightedPrize === i ? 'selected' : ''}`}>
+                <button
+                  type="button"
+                  className="new-prize-hit"
+                  aria-label={`${prize.title || 'Item da cesta'}. ${highlightedPrize === i ? 'Em destaque' : 'Clique para ampliar'}`}
+                  aria-pressed={highlightedPrize === i}
+                  onClick={() => setHighlightedPrize(i)}
+                />
+                <span className={`new-prize-tag r${i + 1}`}>{i === 0 ? 'Cesta completa' : 'Detalhe da cesta'}</span>
+                <img src={prize.image} alt={prize.title || `Detalhe da cesta ${i + 1}`} loading="lazy" />
+                <div className="new-prize-detail"><h3>{prize.title || `Item da cesta ${i + 1}`}</h3><p>{prize.description}</p></div>
+              </article>
+            ))}
+          </div>
+          <p className="sr-only" role="status" aria-live="polite">{`${prizes[highlightedPrize]?.title || 'Item da cesta'} em destaque`}</p>
+          <p className="prize-note">Imagens ilustrativas de uma única cesta. Os itens efetivamente incluídos e as condições estão no regulamento.</p>
+        </div>
+      </section>
+
+      <section className="new-how band" id="como-funciona">
+        <div className="wrap">
+          <div className="new-section-heading"><span className="eyebrow">Simples e gratuito</span><h2>Como funciona?</h2><p>Três passos para participar dessa surpresa.</p></div>
+          <div className="new-how-grid">
+            <div className="new-step"><span className="new-step-icon">01</span><div><h3>Preencha seu cadastro</h3><p>Conte um pouquinho sobre você no formulário seguro.</p></div></div>
+            <div className="new-step"><span className="new-step-icon">02</span><div><h3>Receba seu número</h3><p>Seu número e protocolo são gerados na hora. Guarde-os com carinho.</p></div></div>
+            <div className="new-step"><span className="new-step-icon">03</span><div><h3>Acompanhe o resultado</h3><p>Consulte o único número vencedor na página de resultados.</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="new-invite band" id="participar"><div className="wrap new-invite-grid">
+        <div className="new-invite-copy"><span className="eyebrow">Sua jornada merece carinho</span><h2>Preparada para participar?</h2><p>Reserve seu número gratuitamente e acompanhe tudo com tranquilidade. Estamos torcendo por você!</p><img src="/media/mao-bebe.webp" alt="Mão delicada segurando a mão de um recém-nascido" loading="lazy" /><div className="new-invite-points"><span>✓ Sem compra</span><span>✓ Cadastro individual</span><span>✓ Consulta por protocolo</span></div><Link to="/resultado#regulamento" className="subtle-link">Leia o regulamento completo →</Link></div>
+        <RegistrationForm />
+      </div></section>
     </SiteChrome>
   );
 }

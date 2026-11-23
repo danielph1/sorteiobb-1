@@ -1,35 +1,10 @@
-export const onlyDigits = (s) => String(s || '').replace(/\D/g, '');
-export function maskCpf(v) {
-  const d = onlyDigits(v).slice(0, 11);
-  return d.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-}
-export function maskPhone(v) {
-  const d = onlyDigits(v).slice(0, 11);
-  if (d.length <= 2) return d ? `(${d}` : '';
-  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-}
-export function maskDate(v) {
-  const d = onlyDigits(v).slice(0, 8);
-  return d.replace(/(\d{2})(\d)/, '$1/$2').replace(/(\d{2})(\d)/, '$1/$2');
-}
-export function brDateToIso(v) {
-  const m = String(v || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
-}
-export function validCpf(v) {
-  const d = onlyDigits(v);
-  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
-  const calc = (n) => {
-    let s = 0;
-    for (let i = 0; i < n; i++) s += Number(d[i]) * (n + 1 - i);
-    const r = (s * 10) % 11;
-    return r === 10 ? 0 : r;
-  };
-  return calc(9) === Number(d[9]) && calc(10) === Number(d[10]);
-}
-export const fmtDateTime = (s) => (s ? new Date(s).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—');
-export const fmtDate = (s) => (s ? new Date(s.length === 10 ? s + 'T12:00:00' : s).toLocaleDateString('pt-BR') : '—');
-export const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
-export const DISCOVERY = ['Instagram', 'WhatsApp', 'Indicação de amiga', 'Grupo de gestantes', 'Facebook', 'TikTok', 'Outro'];
+export const onlyDigits=v=>String(v||'').replace(/\D/g,'');
+export const maskCpf=v=>onlyDigits(v).slice(0,11).replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+export const maskPhone=v=>{const d=onlyDigits(v).slice(0,11);if(d.length<3)return d;return `(${d.slice(0,2)}) ${d.length>10?d.slice(2,7):d.slice(2,6)}${d.length>6?'-'+d.slice(d.length>10?7:6):''}`};
+export const maskDate=v=>onlyDigits(v).slice(0,8).replace(/(\d{2})(\d)/,'$1/$2').replace(/(\d{2}\/\d{2})(\d)/,'$1/$2');
+export function brDateToIso(v){if(!v)return null;const m=v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);if(!m)return null;const d=new Date(`${m[3]}-${m[2]}-${m[1]}T12:00:00Z`);return d.getUTCDate()===Number(m[1])&&d.getUTCMonth()+1===Number(m[2])?`${m[3]}-${m[2]}-${m[1]}`:null}
+export function validCpf(value){const d=onlyDigits(value);if(d.length!==11||/^(\d)\1+$/.test(d))return false;for(let k=9;k<11;k++){let sum=0;for(let i=0;i<k;i++)sum+=Number(d[i])*(k+1-i);let check=(sum*10)%11;if(check===10)check=0;if(check!==Number(d[k]))return false}return true}
+export const UFS='AC AL AM AP BA CE DF ES GO MA MG MS MT PA PB PE PI PR RJ RN RO RR RS SC SE SP TO'.split(' ');
+export const DISCOVERY=['Instagram','Facebook','WhatsApp','Google','Indicação de amigos','Outros'];
+export const fmtDate=x=>x?new Date(`${x}T12:00:00`).toLocaleDateString('pt-BR'):'—';
+export const fmtDateTime=x=>x?new Date(x).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):'—';

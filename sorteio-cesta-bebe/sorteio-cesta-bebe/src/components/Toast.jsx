@@ -1,24 +1,5 @@
-import { useEffect, useState } from 'react';
-
-let push = () => {};
-export const toast = {
-  success: (m) => push({ m, t: 'ok' }),
-  error: (m) => push({ m, t: 'err' }),
-  info: (m) => push({ m, t: 'info' }),
-};
-
-export function Toaster() {
-  const [items, setItems] = useState([]);
-  useEffect(() => {
-    push = (it) => {
-      const id = Math.random();
-      setItems((x) => [...x, { ...it, id }]);
-      setTimeout(() => setItems((x) => x.filter((i) => i.id !== id)), 4200);
-    };
-  }, []);
-  return (
-    <div className="toasts" role="status" aria-live="polite">
-      {items.map((i) => <div key={i.id} className={`toast toast-${i.t}`}>{i.m}</div>)}
-    </div>
-  );
-}
+import {useEffect,useState} from 'react';
+const listeners=new Set();
+function emit(type,msg){for(const cb of listeners)cb({type,msg,id:Math.random()})}
+export const toast={success:(msg)=>emit('ok',msg),error:(msg)=>emit('err',msg),info:(msg)=>emit('info',msg)};
+export function Toaster(){const [items,setItems]=useState([]);useEffect(()=>{const fn=i=>{setItems(x=>[...x.slice(-3),i]);setTimeout(()=>setItems(x=>x.filter(t=>t.id!==i.id)),5000)};listeners.add(fn);return()=>listeners.delete(fn)},[]);return <div className="toasts" role="status" aria-live="polite">{items.map(i=><div key={i.id} className={'toast toast-'+i.type}>{i.msg}</div>)}</div>}

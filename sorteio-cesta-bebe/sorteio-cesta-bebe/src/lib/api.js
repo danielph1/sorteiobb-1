@@ -1,20 +1,10 @@
-import { supabase } from './supabase.js';
-
-export async function callApi(path, { method = 'GET', body } = {}) {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  const r = await fetch(path, {
-    method,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  let j = {};
-  try { j = await r.json(); } catch { j = { error: `Resposta inválida (HTTP ${r.status}). A função da Vercel está publicada?` }; }
-  if (!r.ok || j.error) throw new Error(j.error || `HTTP ${r.status}`);
-  return j;
+import {supabase} from './supabase.js';
+export async function callApi(path,{method='GET',body}={}){
+ const {data:{session}}=await supabase.auth.getSession();
+ const r=await fetch(path,{method,headers:{...(body?{'Content-Type':'application/json'}:{}),...(session?{Authorization:`Bearer ${session.access_token}`}:{})},...(body?{body:JSON.stringify(body)}:{})});
+ const data=await r.json().catch(()=>({error:'Resposta inválida do servidor.'}));
+ if(!r.ok)throw new Error(data.error||'Erro de comunicação.');return data;
 }
-
-export async function audit(action, details) {
-  const { data } = await supabase.auth.getUser();
-  await supabase.from('audit_log').insert({ who: data.user?.email || 'admin', action, details: details || null });
+export async function audit(action,details={}){
+ try{const {data:{user}}=await supabase.auth.getUser();if(user)await supabase.from('audit_log').insert({who:user.email||'admin',action,details});}catch{}
 }
