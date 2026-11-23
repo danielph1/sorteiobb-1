@@ -1,6 +1,15 @@
--- BASE COMPLETA PARA UM NOVO PROJETO SUPABASE.
--- SE O BANCO SORTEIODEBEBE JA EXISTE, NAO EXECUTE ESTE ARQUIVO:
--- EXECUTE APENAS supabase/migracao-v3-sorteio-unico.sql NO BANCO EXISTENTE.
+-- SORTEIO CESTA BEBÊ — SQL COMPLETO V4 (UM SORTEIO, UMA CESTA)
+-- Origem: arquivos da versão V3 enviados na conversa, adaptados para eliminar os cinco cartões.
+-- Para banco NOVO e para atualizar o banco V2/V3 existente sem apagar cadastros.
+-- Execute APENAS NO PROJETO SUPABASE DO SORTEIO, SQL Editor > Run.
+-- Revise um backup antes de qualquer alteração em produção.
+-- Se existir resultado já publicado na lógica de cinco colocações, o script interrompe e faz ROLLBACK.
+-- A alteração remove apenas as colunas antigas ranked_results e settings.prizes;
+-- preserva entries, auth.users, admin_users e as apurações únicas já publicadas.
+-- SQL não altera imagens/cartões no site: publique também o frontend da V4.
+
+begin;
+
 create extension if not exists pgcrypto;
 create table if not exists public.admin_users (
  user_id uuid primary key references auth.users(id) on delete cascade,
@@ -27,9 +36,9 @@ create index if not exists entries_created_at_idx on public.entries (created_at 
 create index if not exists entries_status_idx on public.entries(status);
 create table if not exists public.draws (
  id int primary key default 1 check(id=1), slug text not null default 'cesta-bebe',
- title text not null default 'SORTEIO de prêmios para o seu bebê.',
+ title text not null default 'Um carinho especial para mamães e futuros bebês.',
  subtitle text not null default 'Preencha o cadastro gratuitamente, receba seu número na hora e concorra a uma ajudinha carinhosa para o começo dessa nova fase.',
- prize_title text not null default 'Cesta para bebê', prize_description text, prize_image_url text,
+ prize_title text not null default 'Cesta Bebê Completa', prize_description text default 'Uma cesta especial com itens para os primeiros cuidados.', prize_image_url text,
  status text not null default 'open' check(status in ('open','closed','published')),
  registration_closes_at timestamptz,
  rules_notes text not null default 'Participação gratuita e exclusiva para gestantes. Uma inscrição por CPF. Um único sorteio e uma única cesta como prêmio. Um número vencedor calculado a partir do concurso da Loteria Federal indicado pela organização, conforme regulamento.',
@@ -43,22 +52,103 @@ create table if not exists public.federal_history (
  concurso int primary key, data date, dezenas text[] not null, consultado_em timestamptz not null default now()
 );
 create table if not exists public.settings (
- id int primary key default 1 check(id=1), site_name text not null default 'Sorteio Cesta Bebê',
+ id int primary key default 1 check(id=1),
+ site_name text not null default 'Sorteio Cesta Bebê',
  meta_pixel_id text default '', whatsapp_number text default '',
  whatsapp_message text default 'Olá! Fiz minha inscrição no Sorteio Cesta Bebê.',
- instagram text default '', contact_email text default '', contact_phone text not null default '', show_contact_email boolean not null default false, show_contact_phone boolean not null default false, prize_image_url text default '', hero_image_url text default '', prizes jsonb not null default '[{"title":"Cesta Bebê Completa","description":"Cesta para os primeiros cuidados.","image":"/media/cesta-maternidade.webp"},{"title":"Kit Enxoval Conforto","description":"Itens de enxoval.","image":"/media/enxoval.webp"},{"title":"Kit Higiene e Cuidados","description":"Itens de higiene.","image":"/media/cuidados.webp"},{"title":"Kit Roupinhas do Bebê","description":"Roupinhas.","image":"/media/roupinhas.webp"},{"title":"Kit Diversão e Estímulo","description":"Brinquedos.","image":"/media/brinquedos.webp"}]'::jsonb
+ instagram text default '', contact_email text default '', contact_phone text not null default '',
+ show_contact_email boolean not null default false,
+ show_contact_phone boolean not null default false,
+ prize_image_url text default '', hero_image_url text default ''
 );
 insert into public.settings(id) values(1) on conflict do nothing;
 create table if not exists public.audit_log (
  id bigint generated always as identity primary key, "when" timestamptz not null default now(),
  who text, action text not null, details jsonb
 );
+-- Compatibilidade com bancos existentes V2/V3 sem perder cadastros.
+-- Se já existe resultado V2 publicado com cinco colocações, pare: precisa de revisão manual.
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+             where table_schema='public' and table_name='draws' and column_name='ranked_results')
+     and exists(select 1 from public.draws where status='published') then
+    raise exception 'Resultado de cinco colocações já publicado. Migração interrompida para preservar o histórico.';
+  end if;
+end $$;
+
+alter table public.draws
+  add column if not exists prize_title text not null default 'Cesta Bebê Completa',
+  add column if not exists prize_description text,
+  add column if not exists prize_image_url text;
+
+alter table public.settings
+  add column if not exists contact_email text default '',
+  add column if not exists contact_phone text not null default '',
+  add column if not exists show_contact_email boolean not null default false,
+  add column if not exists show_contact_phone boolean not null default false,
+  add column if not exists prize_image_url text default '',
+  add column if not exists hero_image_url text default '';
+
+-- Se o banco anterior guardava cinco cartões, preserva apenas os dados do primeiro
+-- (cesta completa) antes de retirar a estrutura de múltiplos prêmios.
+do $$
+declare first_basket jsonb;
+begin
+  if exists(select 1 from information_schema.columns
+            where table_schema='public' and table_name='settings' and column_name='prizes') then
+    execute 'select prizes -> 0 from public.settings where id=1' into first_basket;
+    if first_basket is not null then
+      update public.draws d set
+        prize_title = case when d.prize_title is null or btrim(d.prize_title) in ('','Cesta para bebê')
+          then coalesce(nullif(first_basket->>'title',''),'Cesta Bebê Completa') else d.prize_title end,
+        prize_description = coalesce(nullif(d.prize_description,''),nullif(first_basket->>'description','')),
+        prize_image_url = coalesce(nullif(d.prize_image_url,''),nullif(first_basket->>'image',''))
+      where d.id=1;
+    end if;
+  end if;
+end $$;
+
+-- Uma cesta única, sem lista de cinco premiações no banco ou na API.
+alter table public.settings drop column if exists prizes;
+
+-- Remove cinco colocações antigas. Se havia cálculo preliminar, limpa apenas
+-- os campos de apuração; inscrições, protocolos, usuários e histórico permanecem.
+do $$
+begin
+  if exists(select 1 from information_schema.columns
+            where table_schema='public' and table_name='draws' and column_name='ranked_results') then
+    execute $q$update public.draws
+      set winning_number=null,winner_entry_id=null,federal_dezenas=null,
+          federal_data=null,synced_at=null,published_at=null
+      where status <> 'published' and jsonb_array_length(coalesce(ranked_results,'[]'::jsonb)) > 0$q$;
+  end if;
+end $$;
+alter table public.draws drop column if exists ranked_results;
+
+-- Apenas substitui textos padrão antigos; preserva os personalizados pelo organizador.
+update public.draws set
+  title = 'Um carinho especial para mamães e futuros bebês.'
+where id=1 and title='SORTEIO de prêmios para o seu bebê.';
+update public.draws set
+  prize_title = 'Cesta Bebê Completa'
+where id=1 and prize_title='Cesta para bebê';
+update public.draws set
+  prize_description = 'Uma cesta especial com itens para os primeiros cuidados.'
+where id=1 and (prize_description is null or btrim(prize_description)='');
+update public.draws set
+  rules_notes = 'Participação gratuita e exclusiva para gestantes. Uma inscrição por CPF. Cada participante recebe um número único de 00000 a 99999. Há um único sorteio e uma cesta como prêmio. O número vencedor é calculado a partir do concurso da Loteria Federal pelo método informado no regulamento. Se o número não estiver atribuído a uma inscrição válida, não haverá contemplado. Consulte todas as condições da campanha.'
+where id=1 and (
+  rules_notes = 'Cada participante recebe um número de 00000 a 99999. O número sorteado é calculado a partir do resultado da Loteria Federal do concurso indicado. Participação gratuita e exclusiva para gestantes. Uma inscrição por CPF.'
+  or rules_notes like 'Participação gratuita e exclusiva para gestantes. Uma inscrição por CPF. Cada participante recebe um número de 00000 a 99999. O resultado utiliza os cinco prêmios%'
+);
+
 create or replace function public.is_admin() returns boolean
-language sql stable security definer set search_path=public as $$
+language sql stable security definer set search_path=pg_catalog,public as $$
  select exists(select 1 from public.admin_users where user_id=auth.uid());
 $$;
 create or replace function public.valid_cpf(p text) returns boolean
-language plpgsql immutable as $$
+language plpgsql immutable set search_path=pg_catalog,public as $$
 declare d text:=regexp_replace(coalesce(p,''),'\D','','g');s int;r int;i int;
 begin
  if length(d)<>11 or d~'^(\d)\1{10}$' then return false;end if;
@@ -68,11 +158,11 @@ begin
  r:=(s*10)%11;if r=10 then r:=0;end if;return r=substr(d,11,1)::int;
 end $$;
 create or replace function public.admin_who() returns text
-language sql stable security definer set search_path=public as $$
+language sql stable security definer set search_path=pg_catalog,public as $$
  select coalesce((select username from public.admin_users where user_id=auth.uid()),'sistema');
 $$;
 create or replace function public.register_entry(p jsonb) returns jsonb
-language plpgsql security definer set search_path=public,extensions,pg_catalog as $$
+language plpgsql security definer set search_path=pg_catalog,public,extensions as $$
 declare
  v_cpf text:=regexp_replace(coalesce(p->>'cpf',''),'\D','','g');
  v_phone text:=regexp_replace(coalesce(p->>'phone',''),'\D','','g');
@@ -116,7 +206,7 @@ begin
  return jsonb_build_object('existing',false,'raffle_number',v_num,'protocol',v_prot);
 end $$;
 create or replace function public.public_status() returns jsonb
-language sql stable security definer set search_path=public as $$
+language sql stable security definer set search_path=pg_catalog,public as $$
  select jsonb_build_object('status',d.status,'registration_closes_at',d.registration_closes_at,
  'rules_notes',d.rules_notes,'calc_mode',d.calc_mode,
  'federal_concurso',case when d.status='published' then d.federal_concurso end,
@@ -124,19 +214,20 @@ language sql stable security definer set search_path=public as $$
  'federal_data',case when d.status='published' then d.federal_data end,
  'winning_number',case when d.status='published' then d.winning_number end,
  'published_at',d.published_at,'title',d.title,'subtitle',d.subtitle,'prize_title',d.prize_title,
+ 'prize_description',d.prize_description,'prize_image_url',d.prize_image_url,
  'settings',(select (to_jsonb(s)-'id'-'contact_email'-'contact_phone') || jsonb_build_object('contact_email', case when s.show_contact_email then s.contact_email else '' end, 'contact_phone', case when s.show_contact_phone then s.contact_phone else '' end) from public.settings s where s.id=1)) from public.draws d where d.id=1;
 $$;
 create or replace function public.lookup_protocol(p_protocol text) returns jsonb
-language plpgsql stable security definer set search_path=public as $$
+language plpgsql stable security definer set search_path=pg_catalog,public as $$
 declare e public.entries;d public.draws;
 begin
  select * into e from public.entries where protocol=upper(btrim(p_protocol));
  if not found then return jsonb_build_object('found',false);end if;
  select * into d from public.draws where id=1;
- return jsonb_build_object('found',true,'raffle_number',e.raffle_number,'first_name',split_part(e.full_name,' ',1),'published',d.status='published','winner',d.status='published' and d.winner_entry_id=e.id);
+ return jsonb_build_object('found',true,'raffle_number',e.raffle_number,'first_name',split_part(e.full_name,' ',1),'published',d.status='published','winner',d.status='published' and d.winner_entry_id=e.id and e.status<>'invalidada');
 end $$;
 create or replace function public.audit_entries() returns trigger
-language plpgsql security definer set search_path=public as $$
+language plpgsql security definer set search_path=pg_catalog,public as $$
 begin
  if tg_op='UPDATE' then insert into public.audit_log(who,action,details) values(public.admin_who(),'entry.update',jsonb_build_object('protocol',new.protocol,'status',new.status));return new;
  elsif tg_op='DELETE' then insert into public.audit_log(who,action,details) values(public.admin_who(),'entry.remove',jsonb_build_object('protocol',old.protocol));return old;end if;
@@ -163,9 +254,25 @@ create policy self_touch on public.admin_users for update to authenticated using
 grant execute on function public.register_entry(jsonb) to anon,authenticated;
 grant execute on function public.public_status() to anon,authenticated;
 grant execute on function public.lookup_protocol(text) to anon,authenticated;
-revoke execute on function public.is_admin() from anon;
--- Banco novo: as configurações da cesta e os contatos opcionais já estão incluídos.
--- Banco V2 já existente: execute somente supabase/migracao-v3-sorteio-unico.sql.
+revoke execute on function public.is_admin() from public;
+grant execute on function public.is_admin() to authenticated;
+revoke execute on function public.admin_who() from public;
+grant execute on function public.admin_who() to authenticated;
+revoke execute on function public.public_status() from public;
+revoke execute on function public.lookup_protocol(text) from public;
+revoke execute on function public.register_entry(jsonb) from public;
+-- Acesso direto às tabelas continua restrito por RLS.
+grant select,insert,update,delete on public.entries,public.draws,public.federal_history,public.settings,public.audit_log to authenticated;
+grant select,update on public.admin_users to authenticated;
+
+-- Banco novo ou V2/V3 existente: este é o único script SQL necessário.
 -- PRIMEIRO ADMIN: adicione usuário em Authentication > Users; depois:
 -- insert into public.admin_users(user_id,username,name)
 -- select id,email,'Organização' from auth.users where email='SEU_EMAIL@exemplo.com';
+
+commit;
+
+-- Conferência SOMENTE LEITURA (execute após o Success):
+-- select id,status,prize_title,prize_description,winning_number,winner_entry_id from public.draws;
+-- select count(*) as inscricoes from public.entries;
+-- select public.public_status();

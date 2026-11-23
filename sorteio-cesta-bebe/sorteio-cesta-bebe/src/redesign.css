@@ -58,29 +58,17 @@ body { background: var(--bg); }
 .new-section-heading .eyebrow { margin-inline: auto; }
 .new-section-heading h2 { font-size: clamp(28px,3.25vw,42px); margin-bottom: 12px; }
 .new-section-heading p { color: #777873; margin: 0; font-size: 15px; }
-/* Interação dos prêmios: no desktop o item escolhido cresce no próprio lugar. */
-.prize-interaction-hint { margin: -7px auto 20px; text-align: center; color: #836d6a; font-size: 13px; }
-.new-prize-grid { display: grid; gap: 14px; align-items: stretch; transition: grid-template-columns .38s cubic-bezier(.22,.75,.25,1); }
-.new-prize-grid.picked-1 { grid-template-columns: minmax(0,1.7fr) repeat(4,minmax(0,1fr)); }
-.new-prize-grid.picked-2 { grid-template-columns: minmax(0,1fr) minmax(0,1.7fr) repeat(3,minmax(0,1fr)); }
-.new-prize-grid.picked-3 { grid-template-columns: repeat(2,minmax(0,1fr)) minmax(0,1.7fr) repeat(2,minmax(0,1fr)); }
-.new-prize-grid.picked-4 { grid-template-columns: repeat(3,minmax(0,1fr)) minmax(0,1.7fr) minmax(0,1fr); }
-.new-prize-grid.picked-5 { grid-template-columns: repeat(4,minmax(0,1fr)) minmax(0,1.7fr); }
-.new-prize-card { position: relative; min-width: 0; border: 1px solid #f0ddd8; background: #fff; border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; transition: transform .25s,box-shadow .25s,background .25s,border-color .25s; }
-.new-prize-card:hover { transform: translateY(-3px); box-shadow: 0 19px 36px -23px #bb8981; }
-.new-prize-card.selected { border: 2px solid #e8ba72; background: #fff7eb; }
-.new-prize-hit { position:absolute; inset:0; z-index:3; display:block; width:100%; height:100%; padding:0; border:0; border-radius:inherit; background:transparent; cursor:pointer; }
-.new-prize-hit:focus-visible { outline:3px solid #7b5084; outline-offset:-5px; }
-.new-prize-card img { width:100%; height:186px; object-fit:cover; transition: height .3s ease; }
-.new-prize-card.selected img { height:205px; }
-.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-.new-prize-tag { position: absolute; z-index: 1; top: 12px; left: 12px; padding: 6px 14px; border-radius: 999px; background: linear-gradient(110deg,#c2a35c,#e2bd7d); color: #fff; font-size: 13px; font-weight: 800; box-shadow: 0 4px 9px -4px #795e3a; }
-.new-prize-tag.r2 { background: #c8848e; }
-.new-prize-tag.r3 { background: #d38e72; }
-.new-prize-tag.r4,.new-prize-tag.r5 { background: #b49ac1; }
-.new-prize-detail { padding: 17px; flex: 1; }
-.new-prize-detail h3 { font: 700 clamp(17px,1.5vw,21px)/1.18 var(--serif); color: #2e493b; }
-.new-prize-detail p { color: #7a756d; font-size: 13px; line-height: 1.55; margin: 10px 0 0; }
+/* Um só sorteio: a cesta é o único prêmio, exibido em um cartão responsivo. */
+.single-basket-card { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1.05fr); width:min(100%,930px); overflow:hidden; margin:0 auto; background:#fffdfb; border-radius:30px; border:1px solid #efdcd8; box-shadow:0 20px 42px -30px #aa7d76; }
+.single-basket-photo { background:linear-gradient(140deg,#f6dfdf,#fff3ed); min-height:330px; }
+.single-basket-photo img { width:100%; height:100%; min-height:330px; object-fit:cover; }
+.single-basket-body { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; padding:clamp(24px,4vw,48px); gap:14px; }
+.single-basket-body h3 { font:700 clamp(25px,3vw,37px)/1.12 var(--serif); color:#2e493b; margin:0; }
+.single-basket-body p { color:#726f6c; margin:0; font-size:15px; }
+.single-basket-body .btn { margin-top:8px; }
+.single-basket-note { font-size:12px!important; line-height:1.55; }
+.single-admin-basket { display:grid; grid-template-columns:minmax(140px,230px) minmax(0,1fr); gap:22px; align-items:start; margin:18px 0; }
+.single-admin-basket img { border-radius:18px; width:100%; aspect-ratio:1/1; object-fit:cover; }
 .prize-note { text-align: center; color: #8a8580; font-size: 12px; margin: 16px auto 0; max-width: 760px; }
 .new-how { background: linear-gradient(180deg,#fffaf5,#fff3f1); }
 .new-how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
@@ -107,19 +95,12 @@ body { background: var(--bg); }
 .new-footer-contact { flex-direction: column; align-items: flex-start; gap: 2px; }
 .new-footer-legal { border-top: 1px solid #ebded5; margin-top: 20px; padding-top: 12px; color: #887d73; font-size: 12px; line-height: 1.6; }
 .admin-prizes { border: 1px solid var(--line); border-radius: 20px; padding: 18px; margin: 14px 0 24px; background: #fffaf7; }
-.admin-prize-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 14px; margin-top: 14px; }
-.admin-prize-edit { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 10px; }
-.admin-prize-edit h3 { margin: 0; font: 700 18px var(--serif); }
-.admin-prize-edit img { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; }
 .admin-contact-note { margin-top: 8px; font-size: 13px; color: var(--muted); }
 .admin-toggle { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
 .admin-toggle input { min-height: 0; width: 20px; height: 20px; accent-color: var(--primary); }
 @media(max-width:1100px){
  .new-hero-grid { grid-template-columns: minmax(150px,.68fr) minmax(0,1.32fr); }
  .new-hero-gift { display:none; }
- .new-prize-grid[class*="picked-"] { grid-template-columns: repeat(3,minmax(0,1fr)); }
- .new-prize-card { order:0; }
- .new-prize-card.selected { grid-column:span 2; order:-1; }
  .new-how-grid { gap: 12px; }
  .new-step { padding: 17px; }
 }
@@ -137,10 +118,6 @@ body { background: var(--bg); }
  .story-slide img { width: 36%; aspect-ratio: 1/1; }
  .story-info h3 { font-size: 20px; }
  .story-info p { font-size: 12px; }
- .new-prize-grid[class*="picked-"] { grid-template-columns:repeat(2,minmax(0,1fr)); }
- .new-prize-card.selected { grid-column:span 2; order:-1; }
- .new-prize-card img,.new-prize-card.selected img { height:160px; }
- .new-prize-card.selected img { height:230px; }
  .new-how-grid,.new-invite-grid { grid-template-columns:1fr; }
  .new-invite-copy>img { height:210px; }
  .new-footer-inner { justify-content:flex-start; }
@@ -149,13 +126,10 @@ body { background: var(--bg); }
  .new-hero-actions { width:100%; }
  .new-hero-actions .btn { flex:1; font-size:12px; padding:10px 13px; }
  .new-hero-trust { gap:9px; }
- .new-prize-detail { padding: 13px; }
- .new-prize-detail h3 { font-size:16px; }
- .new-prize-card img { height:130px; }
  .new-footer-inner nav { gap:10px; }
  .new-site-header .brand span { font-size: 13px; }
 }
-@media(prefers-reduced-motion: reduce){ .story-track { transition:none; } .new-prize-card,.new-prize-grid,.new-prize-card img { transition:none; } }
+@media(prefers-reduced-motion: reduce){ .story-track { transition:none; } }
 
 /* V3 — destaque do prêmio único, mantendo interação por imagem. */
 .single-result-display { text-align:center; padding: 22px 8px 8px; }
@@ -163,3 +137,6 @@ body { background: var(--bg); }
 .single-result-display .digits { flex-wrap: wrap; }
 .single-result-card { background: linear-gradient(160deg, #fff 48%, #fff0ee); }
 @media (max-width: 460px) { .single-result-display .digits span { width: min(15vw, 60px); } }
+
+@media(max-width:760px) { .single-basket-card { grid-template-columns:1fr; border-radius:23px; } .single-basket-photo,.single-basket-photo img { min-height:0; height:clamp(240px,54vw,390px); } .single-admin-basket { grid-template-columns:1fr; } .single-admin-basket img { max-width:260px; } }
+@media(max-width:430px) { .single-basket-body { padding:24px; } }

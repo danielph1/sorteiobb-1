@@ -4,7 +4,6 @@ import { callApi, audit } from '../lib/api.js';
 import { fmtDateTime } from '../lib/format.js';
 import { toast } from '../components/Toast.jsx';
 import { useSite } from '../lib/site.jsx';
-import { DEFAULT_PRIZES, getPrizes } from '../lib/prizes.js';
 
 const FIELDS = [
   ['site_name', 'Nome do sorteio'],
@@ -12,13 +11,13 @@ const FIELDS = [
   ['whatsapp_number', 'WhatsApp da organização (com DDD, usado após inscrição)'],
   ['whatsapp_message', 'Mensagem padrão do WhatsApp'],
   ['instagram', 'Instagram (opcional)'],
-  ['prize_image_url', 'URL da imagem do prêmio principal (opcional)'],
   ['hero_image_url', 'URL da imagem no topo (opcional)'],
 ];
 
 export default function SettingsPanel({ admin }) {
   const { reload } = useSite();
   const [s, setS] = useState(null);
+  const [prize, setPrize] = useState(null);
   const [pw, setPw] = useState({ a: '', b: '' });
   const [users, setUsers] = useState([]);
   const [nu, setNu] = useState({ email: '', name: '', password: '' });
@@ -37,23 +36,40 @@ export default function SettingsPanel({ admin }) {
     supabase.from('settings').select('*').eq('id', 1).single().then(({ data, error }) => {
       if (error) setLoadError(errMsg(error)); else setS(data);
     });
+    supabase.from('draws').select('prize_title, prize_description, prize_image_url').eq('id', 1).single().then(({ data, error }) => {
+      if (error) setLoadError(errMsg(error)); else setPrize(data);
+    });
     supabase.from('audit_log').select('*').order('when', { ascending: false }).limit(60).then(({ data }) => setLog(data || []));
     loadUsers();
   }, []);
 
   const set = (key, value) => setS((current) => ({ ...current, [key]: value }));
-  const prizes = getPrizes(s || {});
-  const setPrize = (i, key, value) => set('prizes', prizes.map((p, n) => n === i ? { ...p, [key]: value } : p));
 
   async function save(e) {
     e.preventDefault();
     setBusy('s');
-    const { id, ...vals } = s;
+    const { id, prizes: _legacyPrizes, ...vals } = s;
     const { error } = await supabase.from('settings').update(vals).eq('id', 1);
     setBusy('');
     if (error) return toast.error(errMsg(error));
     await audit('settings.save');
     toast.success('Site e contatos atualizados.');
+    reload();
+  }
+
+  async function savePrize(e) {
+    e.preventDefault();
+    if (!prize?.prize_title?.trim()) return toast.error('Informe o nome da cesta.');
+    setBusy('prize');
+    const { error } = await supabase.from('draws').update({
+      prize_title: prize.prize_title.trim(),
+      prize_description: prize.prize_description || '',
+      prize_image_url: prize.prize_image_url || '',
+    }).eq('id', 1);
+    setBusy('');
+    if (error) return toast.error(errMsg(error));
+    await audit('draw.prizeUpdate');
+    toast.success('Prêmio único atualizado.');
     reload();
   }
 
@@ -97,20 +113,6 @@ export default function SettingsPanel({ admin }) {
           </label>)}
         </div>
 
-        <section className="admin-prizes" aria-label="Personalizar a cesta e seus itens">
-          <h2>Cesta única e detalhes do conteúdo</h2>
-          <p className="muted small">Estas imagens apresentam um único prêmio: a cesta. A primeira imagem mostra o conjunto; as demais destacam seus possíveis itens. Confirme o conteúdo real no regulamento.</p>
-          <div className="admin-prize-grid">
-            {prizes.map((p, i) => <div key={i} className="admin-prize-edit">
-              <h3>{i === 0 ? 'Imagem geral da cesta' : `Detalhe ${i} da cesta`}</h3>
-              <img src={p.image || DEFAULT_PRIZES[i].image} alt="Prévia do prêmio" loading="lazy" />
-              <label>Nome<input value={p.title} maxLength={100} onChange={(e) => setPrize(i, 'title', e.target.value)} /></label>
-              <label>Descrição<textarea value={p.description} rows="2" maxLength={280} onChange={(e) => setPrize(i, 'description', e.target.value)} /></label>
-              <label>Imagem (URL ou /media/...)<input value={p.image} onChange={(e) => setPrize(i, 'image', e.target.value)} /></label>
-            </div>)}
-          </div>
-        </section>
-
         <section className="admin-prizes">
           <h2>Contato no rodapé</h2>
           <p className="admin-contact-note">Você escolhe se quer exibir e-mail ou telefone. Se a opção estiver desligada, o contato não aparece no site, mesmo preenchido.</p>
@@ -122,6 +124,20 @@ export default function SettingsPanel({ admin }) {
           </div>
         </section>
         <button className="btn" disabled={busy === 's'}>{busy === 's' ? 'Salvando…' : 'Salvar configurações'}</button>
+      </form>}
+
+      {prize && <form className="card" onSubmit={savePrize}>
+        <h2>Prêmio único</h2>
+        <p className="muted small">Configure somente a cesta que será sorteada. Não existem cinco premiações nem categorias separadas de ganhadores.</p>
+        <div className="single-admin-basket">
+          <img src={prize.prize_image_url || s?.prize_image_url || '/media/cesta-maternidade.webp'} alt="Prévia da cesta" loading="lazy" />
+          <div className="grid2">
+            <label>Nome da cesta<input maxLength={100} value={prize.prize_title || ''} onChange={(e) => setPrize({ ...prize, prize_title: e.target.value })} /></label>
+            <label>Imagem da cesta (URL ou /media/...)<input value={prize.prize_image_url || ''} onChange={(e) => setPrize({ ...prize, prize_image_url: e.target.value })} /></label>
+            <label className="full">Descrição da cesta<textarea rows="3" maxLength={500} value={prize.prize_description || ''} onChange={(e) => setPrize({ ...prize, prize_description: e.target.value })} /></label>
+          </div>
+        </div>
+        <button className="btn" disabled={busy === 'prize'}>{busy === 'prize' ? 'Salvando…' : 'Salvar prêmio único'}</button>
       </form>}
 
       <div className="panel-grid">

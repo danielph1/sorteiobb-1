@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import SiteChrome from '../components/SiteChrome.jsx';
 import RegistrationForm from '../components/RegistrationForm.jsx';
 import { useSite } from '../lib/site.jsx';
-import { getPrizes } from '../lib/prizes.js';
 
 const SLIDES = [
   { src: '/media/botinhas.webp', label: 'Feito com carinho', title: 'Pequenos detalhes, muito amor', text: 'Uma surpresa especial para acompanhar essa nova fase.' },
@@ -46,10 +45,10 @@ function Carousel() {
 
 export default function Home() {
   const { status, settings } = useSite();
-  const prizes = getPrizes(settings);
-  const [highlightedPrize, setHighlightedPrize] = useState(0);
   const headline = status?.title && status.title !== 'SORTEIO de prêmios para o seu bebê.' ? status.title : 'Um carinho especial para mamães e futuros bebês.';
-  const firstImage = settings.hero_image_url || settings.prize_image_url || '/media/cesta-maternidade.webp';
+  const firstImage = status?.prize_image_url || settings.prize_image_url || '/media/cesta-maternidade.webp';
+  const basketTitle = status?.prize_title || 'Cesta Bebê Completa';
+  const basketDescription = status?.prize_description || 'Uma cesta preparada com carinho para acompanhar os primeiros cuidados com o bebê.';
   return (
     <SiteChrome>
       <section className="new-hero" id="inicio">
@@ -70,26 +69,23 @@ export default function Home() {
 
       <section id="premios" className="new-prizes band">
         <div className="wrap">
-          <div className="new-section-heading"><span className="eyebrow">Um único presente especial</span><h2>Uma cesta completa, cheia de carinho</h2><p>Um único sorteio, uma única cesta. Explore as fotos e os detalhes dos itens que compõem o presente.</p></div>
-          <p className="prize-interaction-hint">Clique ou toque em uma imagem para ver os detalhes da cesta em destaque.</p>
-          <div className={`new-prize-grid picked-${highlightedPrize + 1}`}>
-            {prizes.map((prize, i) => (
-              <article key={i} className={`new-prize-card ${highlightedPrize === i ? 'selected' : ''}`}>
-                <button
-                  type="button"
-                  className="new-prize-hit"
-                  aria-label={`${prize.title || 'Item da cesta'}. ${highlightedPrize === i ? 'Em destaque' : 'Clique para ampliar'}`}
-                  aria-pressed={highlightedPrize === i}
-                  onClick={() => setHighlightedPrize(i)}
-                />
-                <span className={`new-prize-tag r${i + 1}`}>{i === 0 ? 'Cesta completa' : 'Detalhe da cesta'}</span>
-                <img src={prize.image} alt={prize.title || `Detalhe da cesta ${i + 1}`} loading="lazy" />
-                <div className="new-prize-detail"><h3>{prize.title || `Item da cesta ${i + 1}`}</h3><p>{prize.description}</p></div>
-              </article>
-            ))}
+          <div className="new-section-heading">
+            <span className="eyebrow">Um único prêmio</span>
+            <h2>Uma cesta especial para uma futura mamãe</h2>
+            <p>Um único sorteio, um único número vencedor e uma cesta como prêmio.</p>
           </div>
-          <p className="sr-only" role="status" aria-live="polite">{`${prizes[highlightedPrize]?.title || 'Item da cesta'} em destaque`}</p>
-          <p className="prize-note">Imagens ilustrativas de uma única cesta. Os itens efetivamente incluídos e as condições estão no regulamento.</p>
+          <article className="single-basket-card">
+            <div className="single-basket-photo">
+              <img src={firstImage} alt={`Imagem ilustrativa: ${basketTitle}`} loading="lazy" />
+            </div>
+            <div className="single-basket-body">
+              <span className="eyebrow">A cesta do sorteio</span>
+              <h3>{basketTitle}</h3>
+              <p>{basketDescription}</p>
+              <a className="btn" href="#form-card">Quero participar</a>
+              <p className="single-basket-note">Imagem ilustrativa. Consulte o regulamento para conferir o prêmio e as condições de participação.</p>
+            </div>
+          </article>
         </div>
       </section>
 
