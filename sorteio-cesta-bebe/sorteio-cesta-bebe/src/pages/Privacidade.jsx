@@ -3,17 +3,13 @@ import { Link, useLocation } from 'react-router-dom';
 import SiteChrome from '../components/SiteChrome.jsx';
 import { useSite } from '../lib/site.jsx';
 
-const CONTROLLER_NAME = import.meta.env.VITE_DATA_CONTROLLER_NAME || '';
-const CONTROLLER_DOCUMENT = import.meta.env.VITE_DATA_CONTROLLER_DOCUMENT || '';
 const PRIVACY_EMAIL = import.meta.env.VITE_PRIVACY_EMAIL || '';
 const MARKETING_PARTNERS = import.meta.env.VITE_MARKETING_PARTNERS_LIST || '';
 
 export default function Privacidade() {
   const { settings, pixelConsent, setPixelConsent } = useSite();
   const location = useLocation();
-  const controllerName = CONTROLLER_NAME || '[PREENCHER NOME OU RAZÃO SOCIAL DO ORGANIZADOR]';
-  const controllerDocument = CONTROLLER_DOCUMENT || '[PREENCHER CPF OU CNPJ DO ORGANIZADOR]';
-  const privacyEmail = PRIVACY_EMAIL || settings.contact_email || '[PREENCHER E-MAIL DE PRIVACIDADE]';
+  const privacyEmail = PRIVACY_EMAIL || settings.contact_email || '';
   const whatsapp = String(settings.whatsapp_number || '').replace(/\D/g, '');
   const whatsappLink = whatsapp ? `https://wa.me/${whatsapp.startsWith('55') ? whatsapp : `55${whatsapp}`}` : '';
 
@@ -35,15 +31,8 @@ export default function Privacidade() {
 
           <section>
             <h2>1. Quem é o responsável pelos dados</h2>
-            <p>O controlador dos dados pessoais é:</p>
-            <div className="privacy-highlight">
-              <p><strong>Responsável:</strong> {controllerName}</p>
-              <p><strong>CPF/CNPJ:</strong> {controllerDocument}</p>
-              <p><strong>Nome do site/campanha:</strong> {settings.site_name || 'Sorteio Cesta Bebê'}</p>
-              <p><strong>Canal de privacidade:</strong> {privacyEmail}</p>
-              {whatsappLink && <p><strong>WhatsApp:</strong> <a href={whatsappLink} target="_blank" rel="noreferrer">Falar com a organização</a></p>}
-            </div>
-            {(!CONTROLLER_NAME || !CONTROLLER_DOCUMENT || !PRIVACY_EMAIL) && <p className="privacy-warning"><strong>Atenção antes de publicar:</strong> os dados de identificação e contato do controlador que aparecem entre colchetes precisam ser preenchidos. A identificação do controlador e seu contato são informações exigidas pela LGPD.</p>}
+            <p>O tratamento dos dados pessoais relacionados a esta campanha é realizado pela organização responsável pelo Sorteio Cesta Bebê, para administrar as inscrições, validar a participação, conduzir a apuração e cumprir as demais finalidades descritas neste Aviso de Privacidade.</p>
+            <p>As solicitações relacionadas aos dados pessoais poderão ser feitas pelos canais oficiais de atendimento disponibilizados pela organização durante a campanha.</p>
           </section>
 
           <section>
@@ -92,12 +81,9 @@ export default function Privacidade() {
             <h2>6. Compartilhamento com parceiros e ofertas comerciais</h2>
             <p>A participante pode escolher, separadamente e de forma opcional, autorizar que a organização compartilhe seu nome e dados de contato (telefone/WhatsApp e e-mail, quando informado) com parceiros comerciais para o envio de ofertas, promoções e novidades relacionadas a gestação, maternidade, bebês, cuidados, bem-estar e produtos ou serviços correlatos. Cidade e estado poderão ser utilizados para direcionar ofertas relevantes à região.</p>
             <p>Com essa autorização, a própria organização e os parceiros indicados poderão entrar em contato por WhatsApp, telefone ou e-mail. O CPF, o protocolo de inscrição e a data prevista do parto não serão compartilhados para essa finalidade de marketing por este consentimento. A autorização opcional para receber mensagens operacionais sobre a inscrição é independente e não permite o envio de publicidade.</p>
-            <div className="privacy-highlight">
-              <strong>Parceiros comerciais autorizados</strong>
-              {MARKETING_PARTNERS.trim()
-                ? <p style={{ whiteSpace: 'pre-line' }}>{MARKETING_PARTNERS}</p>
-                : <p className="privacy-warning">A relação nominal dos parceiros, com nome empresarial e identificação suficiente, precisa ser inserida antes de ativar a autorização de compartilhamento. Configure VITE_MARKETING_PARTNERS_LIST no ambiente de publicação.</p>}
-            </div>
+            {MARKETING_PARTNERS.trim()
+              ? <div className="privacy-highlight"><strong>Parceiros comerciais informados para esta campanha</strong><p style={{ whiteSpace: 'pre-line' }}>{MARKETING_PARTNERS}</p></div>
+              : <p>O eventual compartilhamento para esta finalidade ficará limitado a parceiros comerciais que atuem em produtos e serviços relacionados a gestação, maternidade, bebês, cuidados e bem-estar. A organização deverá informar os destinatários antes de compartilhar os dados com cada parceiro.</p>}
             <p>A autorização é facultativa, não é condição para participar do sorteio e pode ser recusada sem qualquer prejuízo à inscrição. A pessoa poderá retirar a autorização a qualquer momento, gratuitamente, solicitando a interrupção das comunicações à organização pelo canal de privacidade ou diretamente ao parceiro que a contatar. A revogação não torna ilícitos os tratamentos realizados antes do pedido.</p>
             <p>Ao receber os dados, cada parceiro deverá observar a LGPD e informar suas próprias práticas de privacidade. A pessoa participante poderá solicitar à organização informações sobre as entidades com as quais houve compartilhamento.</p>
           </section>
@@ -141,8 +127,7 @@ export default function Privacidade() {
 
           <section>
             <h2>11. Como exercer seus direitos</h2>
-            <p>Para fazer solicitações sobre dados pessoais, corrigir informações ou retirar uma autorização de marketing, entre em contato com o controlador pelo e-mail <strong>{privacyEmail}</strong>{whatsappLink ? <> ou pelo <a href={whatsappLink} target="_blank" rel="noreferrer">WhatsApp da organização</a></> : ''}. Informe o assunto da solicitação e os dados necessários para localizar a inscrição. Não envie senha ou dados bancários.</p>
-            <p>O contato indicado nesta seção deve ser monitorado pela organização. Caso o e-mail ainda apareça entre colchetes, ele precisa ser configurado antes da publicação.</p>
+            <p>Para fazer solicitações sobre dados pessoais, corrigir informações ou retirar uma autorização de marketing, utilize os canais oficiais de atendimento disponibilizados pela organização durante a campanha{privacyEmail ? <> ou envie um e-mail para <strong>{privacyEmail}</strong></> : ''}{whatsappLink ? <> ou fale pelo <a href={whatsappLink} target="_blank" rel="noreferrer">WhatsApp da organização</a></> : ''}. Informe o assunto da solicitação e os dados necessários para localizar a inscrição. Não envie senha ou dados bancários.</p>
           </section>
 
           <section>

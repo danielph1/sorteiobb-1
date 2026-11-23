@@ -1,21 +1,17 @@
-CONFIGURAÇÃO OBRIGATÓRIA DO AVISO DE PRIVACIDADE
+CONFIGURAÇÃO INTERNA DO AVISO DE PRIVACIDADE
 
-Antes de publicar, complete os dados reais do controlador e a relação de parceiros comerciais. O aviso exibe campos de preenchimento quando os dados estiverem ausentes.
+A página pública de Privacidade não exibe campos de preenchimento, dados entre colchetes ou avisos de configuração quando alguma variável estiver vazia.
 
-Configure estas variáveis no ambiente de build da Vercel (ou no arquivo .env local):
+Se desejar exibir um canal direto de atendimento e a relação de parceiros comerciais, configure no ambiente de build da Vercel (ou no arquivo .env local):
 
-VITE_DATA_CONTROLLER_NAME=Nome completo ou razão social do organizador
-VITE_DATA_CONTROLLER_DOCUMENT=CPF ou CNPJ do organizador
-VITE_PRIVACY_EMAIL=E-mail monitorado para solicitações LGPD
+VITE_PRIVACY_EMAIL=E-mail monitorado para solicitações sobre dados pessoais
 VITE_MARKETING_PARTNERS_LIST=Nome empresarial e identificação dos parceiros autorizados
 
-Para VITE_MARKETING_PARTNERS_LIST, use uma linha por parceiro, identificando-o de forma clara. Não deixe a autorização de compartilhamento com parceiros ativa antes de informar a relação de destinatários que receberão os dados.
+Para VITE_MARKETING_PARTNERS_LIST, use uma linha por parceiro, identificando-o de forma clara. Não compartilhe dados com parceiros comerciais antes de informar os destinatários e assegurar que a autorização da participante seja válida para essa finalidade.
 
 META PIXEL
 
-O Pixel informado (1735980434763367) é instalado de forma invisível, sem exibir código ou identificador na interface. Por respeito à escolha de privacidade, o script só é carregado depois que a pessoa visitante seleciona “Aceitar medição” no aviso de privacidade. A recusa não bloqueia o site ou a inscrição.
-
-A opção de medição pode ser alterada na página /privacidade. O ID solicitado está definido no código como 1735980434763367.
+O Pixel (1735980434763367) é instalado de forma invisível, sem exibir código ou identificador na interface. O script só é carregado depois que a pessoa visitante seleciona “Aceitar medição” no aviso de privacidade. A recusa não bloqueia o site ou a inscrição.
 
 CONSENTIMENTOS DO FORMULÁRIO
 
@@ -23,4 +19,4 @@ O aceite do regulamento e aviso de privacidade é obrigatório para administrar 
 
 IMPORTANTE
 
-Este texto é um modelo de implementação, não substitui análise jurídica. Confirme as bases legais, identifique o controlador, informe os parceiros efetivos e revise os prazos de retenção e os contratos com fornecedores antes da publicação.
+Este texto é um modelo de implementação, não substitui análise jurídica. Confirme a identidade do controlador, o canal de contato, os parceiros efetivos, as bases legais, os prazos de retenção e os contratos com fornecedores antes da publicação.
