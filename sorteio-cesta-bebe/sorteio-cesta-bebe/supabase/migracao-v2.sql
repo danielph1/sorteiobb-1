@@ -1,0 +1,4 @@
+-- MIGRAÇÃO V2 DESATIVADA: a antiga lógica de cinco colocações foi removida.
+-- Não execute esta migração. No banco Supabase existente, execute:
+--   supabase/migracao-v3-sorteio-unico.sql
+-- Esta versão mantém um único sorteio e um único número vencedor.

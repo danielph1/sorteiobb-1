@@ -1,0 +1,1 @@
+{"rewrites":[{"source":"/((?!api/).*)","destination":"/index.html"}],"crons":[{"path":"/api/sync-federal","schedule":"0 12 * * *"},{"path":"/api/sync-federal","schedule":"30 0 * * *"}]}

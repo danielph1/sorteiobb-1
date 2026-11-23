@@ -1,0 +1,13 @@
+SORTEIO CESTA BEBÊ — V3 — UM SORTEIO / UM GANHADOR
+
+1) Supabase do projeto do sorteio -> SQL Editor -> New Query.
+2) Cole e execute o arquivo supabase/migracao-v3-sorteio-unico.sql.
+   - NÃO execute schema.sql no banco atual.
+   - Inscrições e usuários são preservados.
+   - Se houver resultado já publicado, a migração interrompe para revisão.
+3) Envie os arquivos deste ZIP ao repositório danielph1/sorteiodebebe, na branch main.
+4) Na Vercel use Root Directory ./, Framework Vite, npm run build, Output dist.
+5) Confirme o novo deploy Ready. Confira Home, Resultado e Admin -> Sorteio e resultado.
+6) Atualize o regulamento no painel para a regra única antes de aceitar inscrições.
+
+Não mexa nas 5 variáveis da Vercel.
