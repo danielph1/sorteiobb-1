@@ -17,3 +17,9 @@ Execute `SQL_COMPLETO_UNICO_GANHADOR.sql` no Supabase **do sorteio**, com backup
 Envie o **conteúdo** deste pacote para o repositório que a Vercel realmente usa. O arquivo `package.json` deve estar na raiz configurada como Root Directory. Instalação: `npm install`; build: `npm run build`; saída: `dist`. O SQL não altera a interface — ela exige novo deploy.
 
 **Importante:** um número calculado pode não ter participante inscrito. A existência de um ganhador real deve ser confirmada antes da divulgação de qualquer resultado.
+
+## Privacidade, consentimento e Meta Pixel
+
+O projeto inclui a página `/privacidade` com Termos de Uso e Aviso de Privacidade, consentimento opcional separado para ofertas e compartilhamento com parceiros e aviso de preferência do Meta Pixel. Consulte `PRIVACIDADE_CONFIGURACAO.txt` para preencher os dados do controlador e a lista de parceiros antes de publicar.
+
+O Meta Pixel `1735980434763367` somente é carregado após a escolha “Aceitar medição”. A recusa não impede a navegação ou a inscrição. O consentimento comercial é opcional e é salvo no campo existente `marketing_consent`.

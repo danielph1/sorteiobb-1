@@ -101,7 +101,7 @@ export default function Home() {
       </section>
 
       <section className="new-invite band" id="participar"><div className="wrap new-invite-grid">
-        <div className="new-invite-copy"><span className="eyebrow">Sua jornada merece carinho</span><h2>Preparada para participar?</h2><p>Reserve seu número gratuitamente e acompanhe tudo com tranquilidade. Estamos torcendo por você!</p><img src="/media/mao-bebe.webp" alt="Mão delicada segurando a mão de um recém-nascido" loading="lazy" /><div className="new-invite-points"><span>✓ Sem compra</span><span>✓ Cadastro individual</span><span>✓ Consulta por protocolo</span></div><Link to="/resultado#regulamento" className="subtle-link">Leia o regulamento completo →</Link></div>
+        <div className="new-invite-copy"><span className="eyebrow">Sua jornada merece carinho</span><h2>Preparada para participar?</h2><p>Reserve seu número gratuitamente e acompanhe tudo com tranquilidade. Estamos torcendo por você!</p><img src="/media/mao-bebe.webp" alt="Mão delicada segurando a mão de um recém-nascido" loading="lazy" /><div className="new-invite-points"><span>✓ Sem compra</span><span>✓ Cadastro individual</span><span>✓ Consulta por protocolo</span></div><div className="home-legal-links"><Link to="/resultado#regulamento" className="subtle-link">Leia o regulamento completo →</Link><Link to="/privacidade" className="subtle-link">Termos de uso e privacidade →</Link></div></div>
         <RegistrationForm />
       </div></section>
     </SiteChrome>

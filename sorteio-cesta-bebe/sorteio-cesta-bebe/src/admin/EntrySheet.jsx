@@ -131,7 +131,7 @@ function EntryModal({ entry, onClose, onSaved, onRemoved }) {
             <Detail label="CONSENTIMENTOS">
               <span className="entry-consent-list">
                 <span>Regulamento: <ConsentText value={entry.privacy_consent}/></span>
-                <span>Marketing: <ConsentText value={entry.marketing_consent}/></span>
+                <span>Ofertas/parceiros: <ConsentText value={entry.marketing_consent}/></span>
                 <span>WhatsApp: <ConsentText value={entry.whatsapp_confirmation_consent}/></span>
               </span>
             </Detail>
