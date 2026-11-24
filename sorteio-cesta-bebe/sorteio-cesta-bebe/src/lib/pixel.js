@@ -47,7 +47,7 @@ export function revokePixel() {
 
 export function track(event, params = {}, custom = false) {
   try {
-    if (typeof window !== 'undefined' && window.fbq) {
+    if (typeof window !== 'undefined' && window.fbq && localStorage.getItem('sorteiobb_meta_pixel_consent_v1') === 'accepted') {
       window.fbq(custom ? 'trackCustom' : 'track', event, params);
     }
   } catch {
